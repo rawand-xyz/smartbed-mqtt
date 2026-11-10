@@ -1,6 +1,6 @@
 {
   "name": "Smartbed MQTT",
-  "version": "1.1.22-2",
+  "version": "1.1.22-3",
   "slug": "smartbed-mqtt",
   "description": "A Home Assistant add-on to enable controlling smart beds.",
   "url": "https://github.com/richardhopton/smartbed-mqtt",
@@ -8,7 +8,6 @@
   "arch": ["aarch64", "amd64", "armhf", "armv7", "i386"],
   "boot": "auto",
   "services": ["mqtt:need"],
-  "host_network": true,
   "options": {
     "mqtt_host": "<auto_detect>",
     "mqtt_port": "<auto_detect>",
@@ -115,7 +114,7 @@
     "mqtt_user": "str",
     "mqtt_password": "password",
     "type": "list(scanner|sleeptracker|ergowifi|richmat|linak|solace|motosleep|reverie|leggettplatt|logicdata|ergomotion|okimat|keeson|octo)",
-    "sleeptrackerRefreshFrequency": "int(0,)",
+    "sleeptrackerRefreshFrequency": "int(1,)",
     "sleeptrackerCredentials": [
       {
         "email": "email",
