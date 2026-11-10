@@ -11,13 +11,12 @@ export const processSnoreReliefSwitches = async (
   { user, sideName, entities }: Controller
 ) => {
   const cache = entities as { snoreReliefSwitchSet?: SnoreReliefSwitchSet };
+  if (cache.snoreReliefSwitchSet) return cache.snoreReliefSwitchSet.refresh(() => getSnoreRelief(user));
+
   const snoreRelief = await getSnoreRelief(user);
   if (!snoreRelief) return;
-
-  if (!cache.snoreReliefSwitchSet) {
-    cache.snoreReliefSwitchSet = new SnoreReliefSwitchSet(mqtt, deviceData, sideName, (newSnoreRelief) =>
-      setSnoreRelief(newSnoreRelief, user)
-    );
-  }
+  cache.snoreReliefSwitchSet = new SnoreReliefSwitchSet(mqtt, deviceData, sideName, (newSnoreRelief) =>
+    setSnoreRelief(newSnoreRelief, user)
+  );
   cache.snoreReliefSwitchSet.setState(snoreRelief);
 };
