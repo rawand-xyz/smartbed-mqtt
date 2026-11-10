@@ -31,16 +31,28 @@ export class SnoreReliefSwitchSet implements IStateful<SnoreRelief> {
     );
   }
 
-  // The API sets both values at once, so changes run one after the other, each on top of the last good state.
+  // The API sets both values at once. Changes and refreshes run one after the other,
+  // so each change starts from the last good state and a slow refresh cannot undo it.
+  private enqueue<T>(task: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(task);
+    this.queue = result.catch(() => undefined);
+    return result;
+  }
+
   // Returns the state after the change, or the old state if the API refused it.
-  private change(update: Partial<SnoreRelief>): Promise<SnoreRelief> {
-    const result = this.queue.then(async () => {
+  private change(update: Partial<SnoreRelief>) {
+    return this.enqueue(async () => {
       const next = { ...this.state, ...update };
       if (await this.onChange(next)) this.state = next;
       return this.state;
     });
-    this.queue = result.catch(() => undefined);
-    return result;
+  }
+
+  refresh(read: () => Promise<SnoreRelief | null>) {
+    return this.enqueue(async () => {
+      const state = await read();
+      if (state) this.setState(state);
+    });
   }
 
   setState(state: SnoreRelief | null): void {
