@@ -2,7 +2,7 @@ export type Device = {
   deviceID: number;
   sleeptrackerID: number;
   sleeptrackerProcessorID: number;
-  name: string;
+  name: string | null;
   type: number;
   active: boolean;
   macAddress: string;
