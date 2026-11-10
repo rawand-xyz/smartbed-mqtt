@@ -1,3 +1,17 @@
+## v1.1.22-2 (fork)
+
+**Build**
+
+- Node.js 22 LTS (was Node.js 18, end of life), pinned by image digest
+- Multi-stage build: the image ships only runtime dependencies (about 315 MB down to 186 MB)
+- `yarn install --frozen-lockfile --ignore-scripts`: the lockfile must match, no package install scripts run
+- bashio archive checked against its SHA-256
+- `tslib` is now a declared runtime dependency (the compiled code needs it)
+
+**Dependencies**
+
+- axios 1.21.1 (was 1.7.4), follow-redirects 1.16.3, form-data 4.0.6, ws 7.5.13, minimatch 3.1.5, brace-expansion 1.1.21: fixes the published advisories for the runtime dependencies
+
 ## v1.1.22-1 (fork)
 
 **New Features**
