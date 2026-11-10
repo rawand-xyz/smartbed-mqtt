@@ -1,3 +1,16 @@
+## v1.1.22-1 (fork)
+
+**New Features**
+
+- (Sleeptracker) Log once whether the auth token expiry looks like an epoch or a lifetime, to diagnose a re-login on every refresh (upstream issue #104)
+
+**Bug Fixes**
+
+- (Sleeptracker) Fix crash when the API returns no bed name, e.g. for an account added as a second sleeper (upstream issues #92, #97; upstream PR #99)
+- (Sleeptracker) Keep loading the other accounts when one account returns no devices (upstream PR #99)
+- (Sleeptracker) Include the side name on motor covers, so the covers of both sides of a split base appear (upstream issue #94; upstream PR #95)
+- (Sleeptracker) Make the snore relief switches send the change to the bed
+
 ## v1.1.22
 
 **New Features**
