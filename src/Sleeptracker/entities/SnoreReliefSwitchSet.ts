@@ -8,25 +8,39 @@ import { SnoreRelief } from '../types/SnoreRelief';
 export class SnoreReliefSwitchSet implements IStateful<SnoreRelief> {
   private tilt: Switch;
   private vibration: Switch;
+  private state: SnoreRelief = { snoreReliefTilt: false, snoreReliefVibration: false };
+  private queue: Promise<unknown> = Promise.resolve();
 
   constructor(
     mqtt: IMQTTConnection,
     deviceData: IDeviceData,
     sideName: string,
-    onChange: (value: SnoreRelief) => Promise<boolean>
+    private onChange: (value: SnoreRelief) => Promise<boolean>
   ) {
     this.tilt = new Switch(
       mqtt,
       deviceData,
       buildEntityConfig('Snore Relief Tilt', sideName, 'config'),
-      async (state) => ((await onChange({ ...this.getState(), snoreReliefTilt: state })) ? state : !state)
+      async (snoreReliefTilt) => (await this.change({ snoreReliefTilt })).snoreReliefTilt
     );
     this.vibration = new Switch(
       mqtt,
       deviceData,
       buildEntityConfig('Snore Relief Vibration', sideName, 'config'),
-      async (state) => ((await onChange({ ...this.getState(), snoreReliefVibration: state })) ? state : !state)
+      async (snoreReliefVibration) => (await this.change({ snoreReliefVibration })).snoreReliefVibration
     );
+  }
+
+  // The API sets both values at once, so changes run one after the other, each on top of the last good state.
+  // Returns the state after the change, or the old state if the API refused it.
+  private change(update: Partial<SnoreRelief>): Promise<SnoreRelief> {
+    const result = this.queue.then(async () => {
+      const next = { ...this.state, ...update };
+      if (await this.onChange(next)) this.state = next;
+      return this.state;
+    });
+    this.queue = result.catch(() => undefined);
+    return result;
   }
 
   setState(state: SnoreRelief | null): void {
@@ -35,14 +49,12 @@ export class SnoreReliefSwitchSet implements IStateful<SnoreRelief> {
       this.vibration.setOffline();
       return;
     }
+    this.state = state;
     this.tilt.setState(state.snoreReliefTilt);
     this.vibration.setState(state.snoreReliefVibration);
   }
 
   getState(): SnoreRelief {
-    const snoreReliefTilt = this.tilt.getState() || false;
-    const snoreReliefVibration = this.vibration.getState() || false;
-
-    return { snoreReliefTilt, snoreReliefVibration };
+    return this.state;
   }
 }
