@@ -13,16 +13,19 @@ export class SnoreReliefSwitchSet implements IStateful<SnoreRelief> {
     mqtt: IMQTTConnection,
     deviceData: IDeviceData,
     sideName: string,
-    onChange: (value: SnoreRelief) => Promise<void>
+    onChange: (value: SnoreRelief) => Promise<boolean>
   ) {
-    this.tilt = new Switch(mqtt, deviceData, buildEntityConfig('Snore Relief Tilt', sideName, 'config'), (state) =>
-      onChange({ ...this.getState(), snoreReliefTilt: state })
+    this.tilt = new Switch(
+      mqtt,
+      deviceData,
+      buildEntityConfig('Snore Relief Tilt', sideName, 'config'),
+      async (state) => ((await onChange({ ...this.getState(), snoreReliefTilt: state })) ? state : !state)
     );
     this.vibration = new Switch(
       mqtt,
       deviceData,
       buildEntityConfig('Snore Relief Vibration', sideName, 'config'),
-      (state) => onChange({ ...this.getState(), snoreReliefVibration: state })
+      async (state) => ((await onChange({ ...this.getState(), snoreReliefVibration: state })) ? state : !state)
     );
   }
 
