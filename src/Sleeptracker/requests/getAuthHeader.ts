@@ -1,6 +1,6 @@
 import { Dictionary } from '@utils/Dictionary';
 import { getUnixEpoch } from '@utils/getUnixEpoch';
-import { logError } from '@utils/logger';
+import { logError, logInfo } from '@utils/logger';
 import axios from 'axios';
 import { Credentials } from '../options';
 import defaultHeaders from './shared/defaultHeaders';
@@ -14,6 +14,24 @@ interface AuthToken {
   token: string;
 }
 const authTokens: Dictionary<AuthToken> = {};
+
+// The API does not document whether expirationTimeSecs is an epoch or a lifetime.
+// Log which one it looks like, once, so the cache check can be fixed from real data.
+let expiryFormatLogged = false;
+export const logExpiryFormat = (expirationTimeSecs: unknown) => {
+  if (expiryFormatLogged) return;
+  expiryFormatLogged = true;
+  if (typeof expirationTimeSecs !== 'number') {
+    return logInfo(`[Sleeptracker] Auth token expirationTimeSecs is not a number (${typeof expirationTimeSecs})`);
+  }
+  const now = getUnixEpoch();
+  const looksLikeEpoch = expirationTimeSecs > now / 2;
+  const minutes = Math.round((looksLikeEpoch ? expirationTimeSecs - now : expirationTimeSecs) / 60);
+  logInfo(
+    `[Sleeptracker] Auth token expirationTimeSecs looks like ${looksLikeEpoch ? 'an epoch' : 'a lifetime'}: ` +
+      `token valid for ~${minutes} min`
+  );
+};
 
 export const getAuthHeader = async (credentials: Credentials) => {
   const { authHost, authRequestUrl } = urls(credentials);
@@ -46,6 +64,7 @@ export const getAuthHeader = async (credentials: Credentials) => {
       const { token, expirationTimeSecs } = response.data;
       authToken.token = `Bearer ${token}`;
       authToken.expirationTimeSecs = expirationTimeSecs;
+      logExpiryFormat(expirationTimeSecs);
     }
     return authToken.token;
   } catch (err) {
