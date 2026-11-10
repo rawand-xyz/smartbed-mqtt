@@ -2,6 +2,8 @@
 
 This project aims to enable remote control of adjustable smart beds from HomeAssistant.
 
+> **Fork note:** this is a fork of [richardhopton/smartbed-mqtt](https://github.com/richardhopton/smartbed-mqtt) with fixes that are not in upstream yet. The changes are in [CHANGELOG.md](CHANGELOG.md), in the versions marked "(fork)". To install the fork, add the URL of this repository (not the upstream URL) in the Installation steps below.
+
 ## Support is for:
 
 ### Cloud based
