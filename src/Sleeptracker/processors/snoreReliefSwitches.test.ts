@@ -15,27 +15,48 @@ const user = { email: 'email', password: 'password' };
 const bed = { deviceData: testDevice } as unknown as Bed;
 const controller = { user, sideName: 'Left', entities: {} } as unknown as Controller;
 
-describe(processSnoreReliefSwitches.name, () => {
-  beforeAll(() => jest.useFakeTimers());
+const topic = (name: string, suffix: string) => `device_topic/snore_relief_${name}_left/${suffix}`;
 
-  it('sends a switch command to the API and publishes the result', async () => {
-    const handlers: Record<string, (message: string) => Promise<void>> = {};
+describe(processSnoreReliefSwitches.name, () => {
+  let handlers: Record<string, (message: string) => Promise<void>>;
+
+  beforeAll(() => jest.useFakeTimers());
+  beforeEach(async () => {
+    jest.resetAllMocks();
+    handlers = {};
     mocked(mqtt.on).mockImplementation((topic, func) => (handlers[topic] = func));
     mocked(getSnoreRelief).mockResolvedValue({ snoreReliefTilt: false, snoreReliefVibration: false });
-    mocked(setSnoreRelief).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    await processSnoreReliefSwitches(mqtt, bed, { ...controller, entities: {} });
+  });
 
-    await processSnoreReliefSwitches(mqtt, bed, controller);
-    await handlers['device_topic/snore_relief_tilt_left/command']('ON');
+  it('sends a switch command to the API and publishes the new state', async () => {
+    mocked(setSnoreRelief).mockResolvedValue(true);
+
+    await handlers[topic('tilt', 'command')]('ON');
     jest.runAllTimers();
 
     expect(setSnoreRelief).toHaveBeenCalledWith({ snoreReliefTilt: true, snoreReliefVibration: false }, user);
-    expect(mqtt.publish).toHaveBeenCalledWith('device_topic/snore_relief_tilt_left/state', 'ON');
+    expect(mqtt.publish).toHaveBeenCalledWith(topic('tilt', 'state'), 'ON');
+  });
 
-    await handlers['device_topic/snore_relief_vibration_left/command']('ON');
+  it('keeps the old state when the API refuses the change', async () => {
+    mocked(setSnoreRelief).mockResolvedValue(false);
+
+    await handlers[topic('vibration', 'command')]('OFF');
+    await handlers[topic('vibration', 'command')]('ON');
     jest.runAllTimers();
 
-    // The API refused the change, so the switch keeps its old state.
-    expect(setSnoreRelief).toHaveBeenLastCalledWith({ snoreReliefTilt: true, snoreReliefVibration: true }, user);
-    expect(mqtt.publish).not.toHaveBeenCalledWith('device_topic/snore_relief_vibration_left/state', 'ON');
+    expect(mqtt.publish).not.toHaveBeenCalledWith(topic('vibration', 'state'), 'ON');
+  });
+
+  it('sends two quick changes one after the other, each on top of the last', async () => {
+    mocked(setSnoreRelief).mockResolvedValue(true);
+
+    await Promise.all([handlers[topic('tilt', 'command')]('ON'), handlers[topic('vibration', 'command')]('ON')]);
+
+    expect(mocked(setSnoreRelief).mock.calls.map(([value]) => value)).toEqual([
+      { snoreReliefTilt: true, snoreReliefVibration: false },
+      { snoreReliefTilt: true, snoreReliefVibration: true },
+    ]);
   });
 });
