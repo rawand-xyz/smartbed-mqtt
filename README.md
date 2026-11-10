@@ -44,6 +44,12 @@ This project aims to enable remote control of adjustable smart beds from HomeAss
 
 An MQTT broker is required. The [Mosquitto official Add-On](https://github.com/home-assistant/addons/tree/master/mosquitto) is recommended. Go to Add-ons and search for MQTT, then follow the provided instructions.
 
+By default the add-on reads the broker host, port, user and password from the Home Assistant MQTT service (`<auto_detect>`). To use a different broker, or a separate broker user (for example one with an ACL that allows only the `homeassistant/#` and bed topics), set `mqtt_host`, `mqtt_port`, `mqtt_user` and `mqtt_password`. Each option that is not `<auto_detect>` replaces the detected value.
+
+## Network
+
+The add-on uses the normal add-on network, not the host network. Cloud beds, BLE proxies (including `.local` names) and beds with a fixed `ipAddress` work on it. Logicdata UDP discovery does not: set `ipAddress` for each Logicdata controller.
+
 ## BLE proxy
 
 For BLE controlled beds a dedicated ESP32 running ESPHome's bluetooth proxy is required. Due to limitations in ESPHome, specifically since 2023.7 only one connection can use the bluetooth proxy of an ESP32 at a time, the BLE proxy will need to not be added (or disabled if already added) to HomeAssistant. Use the [ESPHome Ready-Made Projects](https://esphome.io/projects/?type=bluetooth) page to create an ESPHome bluetooth proxy and join it to your network.
@@ -66,7 +72,7 @@ e.g.
    type: tempur
 ```
 
-`sleeptrackerRefreshFrequency` is in minutes.
+`sleeptrackerRefreshFrequency` is in minutes, at least 1.
 
 ## Current features include:
 
@@ -125,7 +131,7 @@ Initial prototyping was only possible due to assistance from Wozman on Discord.
 
 ## Configuring
 
-You must specify at least one Logicdata controller with `name` and `friendlyName`, and optionally `ipAddress`. If an `ipAddress` is not specified UDP discovery will be used to get the `ipAddress`.
+You must specify at least one Logicdata controller with `name` and `friendlyName`, and optionally `ipAddress`. If an `ipAddress` is not specified UDP discovery will be used to get the `ipAddress`. UDP discovery needs the host network, which this add-on does not use, so set `ipAddress` (see [Network](#network)).
 
 ## Current features include:
 

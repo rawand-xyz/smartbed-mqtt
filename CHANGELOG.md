@@ -1,3 +1,14 @@
+## v1.1.22-3 (fork)
+
+**Breaking Changes**
+
+- The add-on no longer uses the host network. Logicdata UDP discovery needs it, so set `ipAddress` for each Logicdata controller. All other bed types work as before.
+- `sleeptrackerRefreshFrequency` must be at least 1 minute (0 made the add-on call the API without a pause)
+
+**Documentation**
+
+- How to use your own MQTT broker or broker user with the `mqtt_*` options
+
 ## v1.1.22-2 (fork)
 
 **Build**

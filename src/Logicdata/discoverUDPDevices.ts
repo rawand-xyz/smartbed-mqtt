@@ -10,6 +10,10 @@ export type UDPDevice = {
 export const discoverUDPDevices = async (deviceNames: string[]): Promise<UDPDevice[]> => {
   const udpDevices: UDPDevice[] = [];
   if (!deviceNames.length) return udpDevices;
+  logWarn(
+    '[Logicdata] UDP discovery needs the host network, which the add-on does not use. Set ipAddress for:',
+    deviceNames
+  );
   const complete = new Deferred<void>();
   const socket = createSocket('udp4');
   const onMessage = (message: Buffer, info: RemoteInfo) => {
